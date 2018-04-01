@@ -13,70 +13,111 @@ import {
   Right,
   Body
 } from "native-base";
+import Morph from 'art/morph/path';
 import { ART, Dimensions } from 'react-native';
 import { pie as d3Pie, arc as d3Arc } from 'd3-shape';
+import { range, pairs } from 'd3-array';
 const {
   Surface,
   Group,
   Rectangle,
   Shape,
+  Text: ShapeText
 } = ART;
-import { scaleLinear, scaleOrdinal } from 'd3-scale';
+
+
+import { scaleSequential, scaleOrdinal } from 'd3-scale';
 import { interpolateRdYlGn } from 'd3-scale-chromatic';
+import styles from "./styles";
 
 const { height, width } = Dimensions.get('window');
 
-const dataset = [
-  { name: 'Success', count: 546 },
-  { name: 'Error', count: 155 }
-];
+const color = scaleSequential(interpolateRdYlGn)
+  .domain([0, 2 * Math.PI]);
 
-let total = 0;
-dataset.forEach(function(d){
-  total+= d.count;
-});
-
-const ratio=dataset[0].count/total;
-
-
-const pie = d3Pie()
-  .value(function(d){return d.count})
-  .sort(null);
-
-const color = scaleOrdinal()
-  .range(['#67BAF5','#F17F4D']);
-
-import styles from "./styles";
 const radius = width/2 - 40; // 20 padding on both sides
 const center = [width/2, height/2];
 
-const innerRadius = radius;
-const outerRadius = radius - 30;
-
-// const arc = d3Arc()
-//   .innerRadius(innerRadius)
-//   .outerRadius(outerRadius);
-//
-// const arcLine = d3Arc()
-//   .innerRadius(innerRadius-13)
-//   .outerRadius(innerRadius-10)
-//   .startAngle(0);
-
-const data = [200];
-const arcs = d3Pie()(data);
-
-const colorScale = scaleLinear()
-  .domain([0, 300])
-  .range([0, 1]);
+const outerRadius = radius;
+const innerRadius = radius - 40;
 
 const arc = d3Arc()
-  .outerRadius(radius - 0)
-  .innerRadius(radius - 30)
-  .padAngle(0.03);
+  .outerRadius(outerRadius - 3)
+  .innerRadius(innerRadius + 3);
+
+const fullCircle = d3Arc()({
+  innerRadius,
+  outerRadius,
+  startAngle: 0,
+  endAngle: 2 * Math.PI
+});
 
 class Dashboard extends Component {
-  render() {
+  static get defaultProps() {
+    return {
+      data: {
+        total : 300,
+        earned: 200
+      }
+    }
+  }
+  constructor(){
+    super();
+    this.state = {
+      progressPath: arc({
+        startAngle: 0,
+        endAngle: 0.02
+      }),
+      fillColor: 'rgb(64, 79, 112)'
+    }
+  }
 
+  componentDidMount() {
+    const dataset = this.props.data;
+
+    const ratio = dataset.earned/dataset.total * 100;
+
+    const arcs = d3Pie()([ ratio, 100 - ratio ]);
+    const { startAngle: valueStartAngle, endAngle: valueEndAnge} = arcs[0];
+    const fillColor = color(valueEndAnge);
+    this.setState({
+      fillColor
+    });
+    const startPath = arc({
+      startAngle: 0,
+      endAngle: 0
+    });
+
+    const fragments = pairs(range(0, valueEndAnge, 0.1));
+    let start = null;
+    let currentIndex = 0;
+
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      let progress = timestamp - start;
+
+      let [startAngle, endAngle] = fragments[currentIndex];
+
+      this.setState({
+        progressPath: arc({
+          startAngle: 0,
+          endAngle
+        })
+      });
+
+      currentIndex++;
+
+      if (currentIndex < fragments.length) {
+        window.requestAnimationFrame(step.bind(this));
+      }
+    }
+
+    requestAnimationFrame(step.bind(this));
+  }
+
+  render() {
+    const { earned, total } = this.props.data;
+    const pointToFull = total - earned;
     return (
       <Container style={styles.container}>
         <Header>
@@ -98,30 +139,31 @@ class Dashboard extends Component {
           <Text>
             <Surface width={width} height={height}>
               <Group x={center[0]} y={radius + 20}>
-                {/*pie(dataset).map((item, i) => {
-                  return (<Shape
-                    key={`arc${i}`}
-                    d={arc(item)}
-                    fill={color(item.data.name)}
-                    stroke={"#2ca02c"}
-                    strokeWidth={1}/>)
-                })*/}
+                <Shape
+                  d={fullCircle}
+                  fill={'rgb(64, 79, 112)'}/>
 
-                {/*<Shape
-                  d={arcLine({endAngle: 0})}
-                  fill={color('Success')}
-                  stroke={"#2ca02c"}
-                  strokeWidth={1}/>*/}
+                <Shape
+                  style={styles.progressPath}
+                  d={this.state.progressPath}
+                  fill={'#7FFF00'}/>
 
-                {arcs.map((item, i) => {
-                  return (<Shape
-                    key={`arc${i}`}
-                    d={arc(item)}
-                    fill={interpolateRdYlGn(colorScale(item.value))}
-                    stroke={"#2ca02c"}
-                    strokeWidth={1}/>)
-                })}
+                  <ShapeText
+                    y={-30}
+                    font={`bold 30px "Helvetica Neue", "Helvetica", Arial`}
+                    fill = "#000000"
+                    alignment = "center"
+                  >
+                    { pointToFull + ' Points'}
+                  </ShapeText>
 
+                  <ShapeText
+                    font={`16px "Helvetica Neue", "Helvetica", Arial`}
+                    fill = "#000000"
+                    alignment = "center"
+                  >
+                    To A Free Service
+                  </ShapeText>
               </Group>
             </Surface>
           </Text>
