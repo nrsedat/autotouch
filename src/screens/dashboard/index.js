@@ -136,37 +136,35 @@ class Dashboard extends Component {
         </Header>
 
         <Content padder>
-          <Text>
-            <Surface width={width} height={height}>
-              <Group x={center[0]} y={radius + 20}>
-                <Shape
-                  d={fullCircle}
-                  fill={'rgb(64, 79, 112)'}/>
+          <Surface width={width} height={height}>
+            <Group x={center[0]} y={radius + 20}>
+              <Shape
+                d={fullCircle}
+                fill={'rgb(64, 79, 112)'}/>
 
-                <Shape
-                  style={styles.progressPath}
-                  d={this.state.progressPath}
-                  fill={'#7FFF00'}/>
+              <Shape
+                style={styles.progressPath}
+                d={this.state.progressPath}
+                fill={'#7FFF00'}/>
 
-                  <ShapeText
-                    y={-30}
-                    font={`bold 30px "Helvetica Neue", "Helvetica", Arial`}
-                    fill = "#000000"
-                    alignment = "center"
-                  >
-                    { pointToFull + ' Points'}
-                  </ShapeText>
+                <ShapeText
+                  y={-30}
+                  font={`bold 30px "Helvetica Neue", "Helvetica", Arial`}
+                  fill = "#000000"
+                  alignment = "center"
+                >
+                  { pointToFull + ' Points'}
+                </ShapeText>
 
-                  <ShapeText
-                    font={`16px "Helvetica Neue", "Helvetica", Arial`}
-                    fill = "#000000"
-                    alignment = "center"
-                  >
-                    To A Free Service
-                  </ShapeText>
-              </Group>
-            </Surface>
-          </Text>
+                <ShapeText
+                  font={`16px "Helvetica Neue", "Helvetica", Arial`}
+                  fill = "#000000"
+                  alignment = "center"
+                >
+                  To A Free Service
+                </ShapeText>
+            </Group>
+          </Surface>
         </Content>
 
         <Footer>
