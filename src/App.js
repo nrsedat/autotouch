@@ -1,6 +1,7 @@
 import React from "react";
 import { Root } from "native-base";
 import { StackNavigator, DrawerNavigator } from "react-navigation";
+import { Font } from 'expo';
 
 import Home from "./screens/home/";
 import AboutUs from "./screens/aboutus/";
